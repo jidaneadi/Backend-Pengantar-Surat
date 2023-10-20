@@ -33,8 +33,9 @@ func main() {
 
 	//API utk semua surat tanpat terkecuali
 	allsurat.Post("/", allsuratcontrollers.Create)
-	allsurat.Get("/", allsuratcontrollers.Show)
-	allsurat.Get("/:id", allsuratcontrollers.ShowId)
+	allsurat.Get("/", allsuratcontrollers.ShowSurat)
+	allsurat.Get("/:id", allsuratcontrollers.ShowSuratByNik)
+	allsurat.Get("/doc/:id", allsuratcontrollers.ShowDocSyarat)
 	allsurat.Put("/:id", allsuratcontrollers.Update)
 	allsurat.Put("/:id", allsuratcontrollers.UpdateStatus)
 	allsurat.Delete(":/id", allsuratcontrollers.Delete)

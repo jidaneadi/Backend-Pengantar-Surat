@@ -75,12 +75,12 @@ func UpdateProfile(c *fiber.Ctx) error {
 	}
 
 	// if err := tx.Where("id")
-	var cekData models.Masyarakat
-	if err := tx.Preload("User").Joins("JOIN User ON masyarakat.nik = user.id").Where("user.id = ?", nik).First(&cekData).Error; err != nil {
+	var cekId models.User
+	if err := models.DB.Where("id =?", nik).First(&cekId).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(404).JSON(fiber.Map{"msg": "User not found"})
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"msg": err.Error()})
+		return c.Status(500).JSON(fiber.Map{"msg": err.Error()})
 	}
 
 	var user models.User
@@ -92,6 +92,16 @@ func UpdateProfile(c *fiber.Ctx) error {
 	if user.Email == "" {
 		return c.Status(400).JSON(fiber.Map{"msg": "Email tidak boleh kosong"})
 	}
+
+	var cekEmail models.User
+	if err := models.DB.Where("email =?", user.Email).Find(&cekEmail).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			if user.Email == cekEmail.Email {
+				return c.Status(400).JSON(fiber.Map{"msg": "Email sudah digunakan"})
+			}
+		}
+	}
+
 	var masyarakat models.Masyarakat
 	masyarakat.NIK = nik
 	if err := c.BodyParser(&masyarakat); err != nil {
@@ -168,8 +178,12 @@ func UpdatePassword(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"msg": "Password tidak sesuai"})
 	}
 
-	if err := models.ValidatePass(&isValid); err != nil {
+	if len(isValid.New_pass) <= 7 {
 		return c.Status(400).JSON(fiber.Map{"msg": "Password harus berjumlah minimal 8 karakter"})
+	}
+
+	if len(isValid.Konf_pass) <= 7 {
+		return c.Status(400).JSON(fiber.Map{"msg": "Konfirmasi password harus berjumlah minimal 8 karakter"})
 	}
 
 	isValid.Old_pass = utils.EncryptHash(isValid.Old_pass)

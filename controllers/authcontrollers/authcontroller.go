@@ -98,8 +98,12 @@ func Register(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Konfirmasi password kosong"})
 	}
 
-	if err := models.ValidateUser(&user); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg_validate": err.Error()})
+	if len(user.Password) <= 7 {
+		return c.Status(400).JSON(fiber.Map{"msg": "Password harus berjumlah minimal 8 karakter"})
+	}
+
+	if len(user.Konf_pass) <= 7 {
+		return c.Status(400).JSON(fiber.Map{"msg": "Konfirmasi password harus berjumlah minimal 8 karakter"})
 	}
 
 	if user.Password != user.Konf_pass {
