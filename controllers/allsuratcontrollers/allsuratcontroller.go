@@ -10,85 +10,6 @@ import (
 	"gorm.io/gorm"
 )
 
-func Create(c *fiber.Ctx) error {
-
-	id := c.Params("id")
-	tx := models.DB
-	if id == "" {
-		return c.Status(400).JSON(fiber.Map{"msg": "Id user kosong"})
-	}
-
-	//Cek data masyarakat apakah NIK sesuai atau tidak
-	var masyarakat models.Masyarakat
-	if err := models.DB.Where("nik =?", id).First(&masyarakat).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return c.Status(404).JSON(fiber.Map{"msg": "User not found"})
-		}
-		return c.Status(500).JSON(fiber.Map{"msg": err.Error()})
-	}
-
-	//Melakukan input surat
-	var surat models.Surat
-	surat.Id_masyarakat = masyarakat.Idm
-	if err := c.BodyParser(&surat); err != nil {
-		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
-	}
-	if surat.Id_masyarakat == "" {
-		return c.Status(400).JSON(fiber.Map{"msg": "Id masyarakat kosong"})
-	}
-
-	//Create data surat
-	if err := tx.Create(&surat).Error; err != nil {
-		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
-	}
-
-	//Menginputkan data dokumen syarat
-	var doc_syarat models.Dokumen_Syarat
-	doc_syarat.Id_surat = surat.ID
-	if err := c.BodyParser(&doc_syarat); err != nil {
-		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
-	}
-
-	if form, err := c.MultipartForm(); err == nil {
-		//Pengambilan key input file
-		files := form.File["filename"]
-
-		//Pengambilan file lbh dr satu
-		for i, file := range files {
-			cekFormat := strings.Split(file.Filename, ".")
-			if cekFormat[1] != "pdf" {
-				return c.Status(400).JSON(fiber.Map{"msg": "File harus berekstensi PDF"})
-			}
-
-			var masyarakat models.Masyarakat
-			if err := models.DB.Where("idm =? ", surat.Id_masyarakat).First(&masyarakat).Error; err != nil {
-				if err == gorm.ErrRecordNotFound {
-					return c.Status(404).JSON(fiber.Map{"msg": "Data tidak ditemukan"})
-				}
-				return c.Status(500).JSON(fiber.Map{"msg": err.Error()})
-			}
-			toString := strconv.Itoa(i)
-			namaDokumen := masyarakat.NIK + surat.ID + toString + "-" + surat.Jns_surat + ".pdf"
-
-			//Menyimpan surat pada file
-			if err := c.SaveFile(file, fmt.Sprintf("./public/%s/%s", surat.Jns_surat, namaDokumen)); err != nil {
-				return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
-			}
-
-			//Create data dokumen surat
-			doc_syarat.Id_surat = surat.ID
-			doc_syarat.Filename = namaDokumen
-			doc_syarat.ID = ""
-			if err := tx.Create(&doc_syarat).Error; err != nil {
-				return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
-			}
-
-		}
-	}
-
-	return c.JSON(fiber.Map{"msg": "Surat berhasil diajukan"})
-}
-
 func ShowSurat(c *fiber.Ctx) error {
 	var surat []models.Surat
 	tx := models.DB
@@ -134,7 +55,6 @@ func ShowSuratByNik(c *fiber.Ctx) error {
 	}
 	data := make([]fiber.Map, len(surat))
 	for i, dataDoc := range surat {
-		// newIdsurat := utils.EncryptHash(dataDoc.ID)
 		createTanggal := dataDoc.CreatedAt.String()[0:9] + " " + dataDoc.CreatedAt.String()[12:19]
 		updateTanggal := dataDoc.UpdatedAt.String()[0:9] + " " + dataDoc.UpdatedAt.String()[12:19]
 		data[i] = fiber.Map{

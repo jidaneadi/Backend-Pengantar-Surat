@@ -3,6 +3,7 @@ package main
 import (
 	"Backend_TA/controllers/allsuratcontrollers"
 	"Backend_TA/controllers/authcontrollers"
+	"Backend_TA/controllers/ktpbarucontrollers"
 	"Backend_TA/controllers/masyarakatcontrollers"
 	"Backend_TA/models"
 
@@ -19,6 +20,7 @@ func main() {
 	auth := api.Group("auth")
 	profile := api.Group("/profile")
 	allsurat := api.Group("/surat")
+	ktpbaru := api.Group("/ktpbaru")
 
 	auth.Post("/refresh", authcontrollers.RefreshToken)
 	auth.Post("/register", authcontrollers.Register)
@@ -31,8 +33,10 @@ func main() {
 	profile.Put("/password/:nik" /*middlewares.Auth,*/, masyarakatcontrollers.UpdatePassword)
 	profile.Delete("/:nik" /*middlewares.Auth,*/, masyarakatcontrollers.DeleteProfile)
 
-	//API utk semua surat tanpat terkecuali
-	allsurat.Post("/:id" /*middlewares.Auth,*/, allsuratcontrollers.Create)
+	//API surat KTP Baru
+	ktpbaru.Post("/:id" /*middlewares.Auth,*/, ktpbarucontrollers.CreateKTPBaru)
+
+	//API utk semua sura tanpat terkecuali
 	allsurat.Get("/" /*middlewares.Auth,*/, allsuratcontrollers.ShowSurat)
 	allsurat.Get("/:id" /*middlewares.Auth,*/, allsuratcontrollers.ShowSuratByNik)
 	allsurat.Get("/doc/:id" /*middlewares.Auth,*/, allsuratcontrollers.ShowDocSyarat)
