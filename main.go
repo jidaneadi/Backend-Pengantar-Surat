@@ -40,8 +40,8 @@ func main() {
 	allsurat.Get("/" /*middlewares.Auth,*/, allsuratcontrollers.ShowSurat)
 	allsurat.Get("/:id" /*middlewares.Auth,*/, allsuratcontrollers.ShowSuratByNik)
 	allsurat.Get("/doc/:id" /*middlewares.Auth,*/, allsuratcontrollers.ShowDocSyarat)
+	allsurat.Put("/doc/:id" /*middlewares.Auth,*/, allsuratcontrollers.UpdateDocSyarat)
 	allsurat.Put("/:id" /*middlewares.Auth,*/, allsuratcontrollers.Update)
-	allsurat.Put("/:id" /*middlewares.Auth,*/, allsuratcontrollers.UpdateStatus)
-	allsurat.Delete(":/id" /*middlewares.Auth,*/, allsuratcontrollers.Delete)
+	allsurat.Delete("/:id" /*middlewares.Auth,*/, allsuratcontrollers.Delete)
 	app.Listen(":4001")
 }

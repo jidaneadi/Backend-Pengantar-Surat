@@ -12,8 +12,8 @@ type Surat struct {
 	Jns_surat     string      `gorm:"default:ktp_baru" json:"jns_surat"`
 	Status        string      `gorm:"default:diproses" json:"status"`
 	Keterangan    string      `json:"keterangan"`
-	CreatedAt     time.Time   `json:"created_at"`
-	UpdatedAt     time.Time   `json:"updated_at"`
+	CreatedAt     time.Time   `json:"created_at" validate:"datetime=2006-02-02 06:20:01"`
+	UpdatedAt     time.Time   `json:"updated_at" validate:"datetime=2006-02-02 06:20:01"`
 	Masyarakat    *Masyarakat `gorm:"foreignKey:Id_masyarakat;references:Idm" json:"masyarakat"`
 }
 

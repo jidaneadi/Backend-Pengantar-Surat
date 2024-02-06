@@ -23,17 +23,16 @@ func ShowSurat(c *fiber.Ctx) error {
 	data := make([]fiber.Map, len(surat))
 	for i, dataSurat := range surat {
 		// newIdsurat := utils.EncryptHash(dataSurat.ID)
-		createTanggal := dataSurat.CreatedAt.String()[0:9] + " " + dataSurat.CreatedAt.String()[12:19]
-		updateTanggal := dataSurat.UpdatedAt.String()[0:9] + " " + dataSurat.UpdatedAt.String()[12:19]
+		updateTanggal := dataSurat.UpdatedAt.String()[0:10] + " " + dataSurat.UpdatedAt.String()[11:19]
 		data[i] = fiber.Map{
-			"id_surat":   dataSurat.ID,
-			"nik":        dataSurat.Masyarakat.NIK,
-			"nama":       dataSurat.Masyarakat.Nama,
-			"jns_surat":  dataSurat.Jns_surat,
-			"status":     dataSurat.Status,
-			"created_at": createTanggal,
-			"updated_at": updateTanggal,
-			"keterangan": dataSurat.Keterangan,
+			"id_surat":      dataSurat.ID,
+			"id_masyarakat": dataSurat.Id_masyarakat,  //Id surat yg digenerate
+			"nik":           dataSurat.Masyarakat.NIK, //NIK yg unik
+			"nama":          dataSurat.Masyarakat.Nama,
+			"jns_surat":     dataSurat.Jns_surat,
+			"status":        dataSurat.Status,
+			"updated_at":    updateTanggal,
+			"keterangan":    dataSurat.Keterangan,
 		}
 	}
 	return c.JSON(data)
@@ -55,17 +54,16 @@ func ShowSuratByNik(c *fiber.Ctx) error {
 	}
 	data := make([]fiber.Map, len(surat))
 	for i, dataDoc := range surat {
-		createTanggal := dataDoc.CreatedAt.String()[0:9] + " " + dataDoc.CreatedAt.String()[12:19]
-		updateTanggal := dataDoc.UpdatedAt.String()[0:9] + " " + dataDoc.UpdatedAt.String()[12:19]
+		updateTanggal := dataDoc.UpdatedAt.String()[0:10] + " " + dataDoc.UpdatedAt.String()[11:19]
 		data[i] = fiber.Map{
-			"id_surat":   dataDoc.ID,
-			"nik":        dataDoc.Masyarakat.NIK,
-			"nama":       dataDoc.Masyarakat.Nama,
-			"jns_surat":  dataDoc.Jns_surat,
-			"status":     dataDoc.Status,
-			"created_at": createTanggal,
-			"updated_at": updateTanggal,
-			"keterangan": dataDoc.Keterangan,
+			"id_surat":      dataDoc.ID,
+			"id_masyarakat": dataDoc.Id_masyarakat,
+			"nik":           dataDoc.Masyarakat.NIK,
+			"nama":          dataDoc.Masyarakat.Nama,
+			"jns_surat":     dataDoc.Jns_surat,
+			"status":        dataDoc.Status,
+			"updated_at":    updateTanggal,
+			"keterangan":    dataDoc.Keterangan,
 		}
 	}
 
@@ -160,7 +158,7 @@ func ShowDocSyarat(c *fiber.Ctx) error {
 // 	return c.JSON(data)
 // }
 
-func Update(c *fiber.Ctx) error {
+func UpdateDocSyarat(c *fiber.Ctx) error {
 	id := c.Params("id")
 	tx := models.DB
 	if id == "" {
@@ -229,7 +227,7 @@ func Update(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"msg": "Surat berhasil di ubah"})
 }
 
-func UpdateStatus(c *fiber.Ctx) error {
+func Update(c *fiber.Ctx) error {
 
 	id := c.Params("id")
 
@@ -258,7 +256,7 @@ func UpdateStatus(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"msg": "Status surat tidak boleh kosong"})
 	}
 
-	if err := models.DB.Where("id =?", id).Updates(&surat).Error; err != nil {
+	if err := models.DB.Where("id =?", id).Updates(&inputSurat).Error; err != nil {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
 
