@@ -26,22 +26,23 @@ func main() {
 	auth.Post("/register", authcontrollers.Register)
 	auth.Post("/login", authcontrollers.Login)
 
-	profile.Get("/" /*middlewares.Auth,*/, masyarakatcontrollers.Show)
-	profile.Post("/" /*middlewares.Auth,*/, authcontrollers.Register)
-	profile.Get("/:nik" /*middlewares.Auth,*/, masyarakatcontrollers.ShowId)
-	profile.Put("/:nik" /*middlewares.Auth,*/, masyarakatcontrollers.UpdateProfile)
-	profile.Put("/password/:nik" /*middlewares.Auth,*/, masyarakatcontrollers.UpdatePassword)
-	profile.Delete("/:nik" /*middlewares.Auth,*/, masyarakatcontrollers.DeleteProfile)
+	profile.Get("/" /*, middlewares.Auth*/, masyarakatcontrollers.Show)
+	profile.Post("/" /*, middlewares.Auth*/, authcontrollers.Register)
+	profile.Get("/:nik" /*, middlewares.Auth*/, masyarakatcontrollers.ShowId)
+	profile.Put("/:nik" /*, middlewares.Auth*/, masyarakatcontrollers.UpdateProfile)
+	profile.Put("/password/:nik" /*, middlewares.Auth*/, masyarakatcontrollers.UpdatePassword)
+	profile.Delete("/:nik" /*, middlewares.Auth*/, masyarakatcontrollers.DeleteProfile)
 
 	//API surat KTP Baru
-	ktpbaru.Post("/:id" /*middlewares.Auth,*/, ktpbarucontrollers.CreateKTPBaru)
+	ktpbaru.Post("/:id" /*, middlewares.Auth*/, ktpbarucontrollers.CreateKTPBaru)
 
 	//API utk semua sura tanpat terkecuali
-	allsurat.Get("/" /*middlewares.Auth,*/, allsuratcontrollers.ShowSurat)
-	allsurat.Get("/:id" /*middlewares.Auth,*/, allsuratcontrollers.ShowSuratByNik)
-	allsurat.Get("/doc/:id" /*middlewares.Auth,*/, allsuratcontrollers.ShowDocSyarat)
-	allsurat.Put("/doc/:id" /*middlewares.Auth,*/, allsuratcontrollers.UpdateDocSyarat)
-	allsurat.Put("/:id" /*middlewares.Auth,*/, allsuratcontrollers.Update)
-	allsurat.Delete("/:id" /*middlewares.Auth,*/, allsuratcontrollers.Delete)
+	allsurat.Get("/" /*, middlewares.Auth*/, allsuratcontrollers.ShowSurat)              //Melihat seluruh data surat
+	allsurat.Get("/:id" /*, middlewares.Auth*/, allsuratcontrollers.ShowSuratByNik)      //Melihat data surat berdasarkan NIK user yang mengajukan
+	allsurat.Get("/data_doc/:id", allsuratcontrollers.ShowDataDoc)                       //Melihat seluruh data dokumen syarat dari pengajuan surat
+	allsurat.Get("/doc/:id" /*, middlewares.Auth*/, allsuratcontrollers.ShowDocSyarat)   //Melakukan download dokumen syarat setiap surat
+	allsurat.Put("/doc/:id" /*, middlewares.Auth*/, allsuratcontrollers.UpdateDocSyarat) //Melakukan update input dokumen syarat
+	allsurat.Put("/:id" /*, middlewares.Auth*/, allsuratcontrollers.Update)              //Melakukan update hanya pada data surat tanpa mengubah data dokumen syarat
+	allsurat.Delete("/:id" /*, middlewares.Auth*/, allsuratcontrollers.Delete)           //Menghapus data surat
 	app.Listen(":4001")
 }
