@@ -2,8 +2,10 @@ package ktpbarucontrollers
 
 import (
 	"Backend_TA/models"
+	"errors"
 	"fmt"
-	"strings"
+	"mime/multipart"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -53,29 +55,26 @@ func CreateKTPBaru(c *fiber.Ctx) error {
 
 	//Input file dokumen probadi
 	dokumenPribadi, err := c.FormFile("dokumen_pribadi")
+
+	if dokumenPribadi == nil {
+		return c.Status(400).JSON(fiber.Map{"msg": "File dokumen pribadi tidak boleh kosong!"})
+	}
+
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
 
-	//Cek format
-	cekDokumenPribadi := strings.Split(dokumenPribadi.Filename, ".")
-	if cekDokumenPribadi[1] != "pdf" {
-		return c.Status(400).JSON(fiber.Map{"msg": "File harus berekstensi PDF"})
+	errCheckContentTypeDP := checkContentType(dokumenPribadi, "application/pdf", "application/PDF")
+	if errCheckContentTypeDP != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"message": errCheckContentTypeDP.Error(),
+		})
 	}
 
-	//Input file keterangan RT
-	suratKeterangan, err := c.FormFile("keterangan_rt")
-	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
-	}
+	nameDokumenPribadi := &dokumenPribadi.Filename
+	extenstionFileDP := filepath.Ext(*nameDokumenPribadi)
 
-	//Cek format
-	cekSuratKeterangan := strings.Split(suratKeterangan.Filename, ".")
-	if cekSuratKeterangan[1] != "pdf" {
-		return c.Status(400).JSON(fiber.Map{"msg": "File harus berekstemsi PDF"})
-	}
-
-	var namaFile = masyarakat.NIK + surat.ID + "1" + "-" + surat.Jns_surat + ".pdf"
+	var namaFile = masyarakat.NIK + surat.ID + "1" + extenstionFileDP
 
 	//Menyimpan file dokumen pribadi pada database
 	if err := c.SaveFile(dokumenPribadi, fmt.Sprintf("./public/%s/%s", surat.Jns_surat, namaFile)); err != nil {
@@ -88,8 +87,30 @@ func CreateKTPBaru(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
 
-	//
-	namaFile = masyarakat.NIK + surat.ID + "2" + "-" + surat.Jns_surat + ".pdf"
+	//Input file keterangan RT
+	suratKeterangan, err := c.FormFile("keterangan_rt")
+
+	if suratKeterangan == nil {
+		return c.Status(400).JSON(fiber.Map{"msg": "File dokumen pribadi tidak boleh kosong!"})
+	}
+
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
+	}
+
+	errCheckContentType := checkContentType(suratKeterangan, "application/pdf", "application/PDF")
+	if errCheckContentType != nil {
+		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+			"message": errCheckContentType.Error(),
+		})
+	}
+
+	filename := &suratKeterangan.Filename
+	extenstionFile := filepath.Ext(*filename)
+	// newFilename := fmt.Sprintf("gambar-satu%s", extenstionFile)
+
+	//Nama file ke 2
+	namaFile = masyarakat.NIK + surat.ID + "2" + extenstionFile
 
 	//Menyimpan file dokumen pribadi pada folder project
 	if err := c.SaveFile(suratKeterangan, fmt.Sprintf("./public/%s/%s", surat.Jns_surat, namaFile)); err != nil {
@@ -104,4 +125,19 @@ func CreateKTPBaru(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"msg": "Surat berhasil diajukan"})
+}
+
+func checkContentType(file *multipart.FileHeader, contentTypes ...string) error {
+	if len(contentTypes) > 0 {
+		for _, contentType := range contentTypes {
+			contentTypeFile := file.Header.Get("Content-Type")
+			if contentTypeFile == contentType {
+				return nil
+			}
+		}
+
+		return errors.New("not allowed file type")
+	} else {
+		return errors.New("not found content type to be checking")
+	}
 }

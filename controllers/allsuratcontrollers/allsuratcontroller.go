@@ -89,7 +89,7 @@ func ShowDataDoc(c *fiber.Ctx) error {
 	for i, dataDoc := range doc_syarat {
 		data[i] = fiber.Map{
 			"id":        dataDoc.ID,              //ID dokumen syarat
-			"syarat":    dataDoc.Filename,        //Nama dokumen syarat
+			"filename":  dataDoc.Filename,        //Nama dokumen syarat
 			"jns_surat": dataDoc.Surat.Jns_surat, //jenis surat yang diajukan
 		}
 	}
