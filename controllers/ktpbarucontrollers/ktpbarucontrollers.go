@@ -40,18 +40,8 @@ func CreateKTPBaru(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"msg": "Id masyarakat kosong"})
 	}
 
-	//Create data surat
-	if err := tx.Create(&surat).Error; err != nil {
-		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
-	}
-
 	//Menginputkan data dokumen syarat
 	var doc_syarat models.Dokumen_Syarat
-
-	doc_syarat.Id_surat = surat.ID
-	if err := c.BodyParser(&doc_syarat); err != nil {
-		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
-	}
 
 	//Input file dokumen probadi
 	dokumenPribadi, err := c.FormFile("dokumen_pribadi")
@@ -74,16 +64,10 @@ func CreateKTPBaru(c *fiber.Ctx) error {
 	nameDokumenPribadi := &dokumenPribadi.Filename
 	extenstionFileDP := filepath.Ext(*nameDokumenPribadi)
 
-	var namaFile = masyarakat.NIK + surat.ID + "1" + extenstionFileDP
+	namaFile1 := masyarakat.NIK + surat.ID + "1" + extenstionFileDP
 
 	//Menyimpan file dokumen pribadi pada database
-	if err := c.SaveFile(dokumenPribadi, fmt.Sprintf("./public/%s/%s", surat.Jns_surat, namaFile)); err != nil {
-		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
-	}
-
-	//Create data dokumen surat
-	doc_syarat.Filename = namaFile
-	if err := tx.Create(&doc_syarat).Error; err != nil {
+	if err := c.SaveFile(dokumenPribadi, fmt.Sprintf("./public/%s/%s", surat.Jns_surat, namaFile1)); err != nil {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
 
@@ -110,15 +94,30 @@ func CreateKTPBaru(c *fiber.Ctx) error {
 	// newFilename := fmt.Sprintf("gambar-satu%s", extenstionFile)
 
 	//Nama file ke 2
-	namaFile = masyarakat.NIK + surat.ID + "2" + extenstionFile
+	namaFile2 := masyarakat.NIK + surat.ID + "2" + extenstionFile
 
 	//Menyimpan file dokumen pribadi pada folder project
-	if err := c.SaveFile(suratKeterangan, fmt.Sprintf("./public/%s/%s", surat.Jns_surat, namaFile)); err != nil {
+	if err := c.SaveFile(suratKeterangan, fmt.Sprintf("./public/%s/%s", surat.Jns_surat, namaFile2)); err != nil {
+		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
+	}
+
+	//Create data surat
+	if err := tx.Create(&surat).Error; err != nil {
+		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
+	}
+	doc_syarat.Id_surat = surat.ID
+	if err := c.BodyParser(&doc_syarat); err != nil {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
 
 	//Create data dokumen surat
-	doc_syarat.Filename = namaFile
+	doc_syarat.Filename = namaFile1
+	if err := tx.Create(&doc_syarat).Error; err != nil {
+		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
+	}
+
+	//Create data dokumen surat
+	doc_syarat.Filename = namaFile2
 	doc_syarat.ID = ""
 	if err := tx.Create(&doc_syarat).Error; err != nil {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
