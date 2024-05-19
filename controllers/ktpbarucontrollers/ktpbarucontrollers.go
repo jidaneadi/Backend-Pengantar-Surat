@@ -91,7 +91,6 @@ func CreateKTPBaru(c *fiber.Ctx) error {
 
 	filename := &suratKeterangan.Filename
 	extenstionFile := filepath.Ext(*filename)
-	// newFilename := fmt.Sprintf("gambar-satu%s", extenstionFile)
 
 	//Nama file ke 2
 	namaFile2 := masyarakat.NIK + surat.ID + "2" + extenstionFile
