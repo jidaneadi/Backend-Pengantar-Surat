@@ -130,6 +130,10 @@ func Register(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": err.Error()})
 	}
 
+	if masyarakat.No_Kk == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Nomor kk kosong"})
+	}
+
 	if masyarakat.Nama == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Nama kosong"})
 	}
@@ -146,14 +150,31 @@ func Register(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Tanggal lahir kosong"})
 	}
 
+	if masyarakat.Agama == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Agama kosong"})
+	}
+
+	if masyarakat.Pekerjaan == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Pekerjaan hp kosong"})
+	}
+
+	if masyarakat.Status == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Status kawin kosong"})
+	}
+
 	if masyarakat.Alamat == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Alamat kosong"})
+	}
+
+	if masyarakat.Warga_Negara == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Warga negara kosong"})
 	}
 
 	if err := models.ValidateMasyarakat(&masyarakat); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": err.Error()})
 	}
 
+	//Create data user dan masyarakat
 	if err := tx.Create(&user).Error; err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg_required": err.Error()})
 	}

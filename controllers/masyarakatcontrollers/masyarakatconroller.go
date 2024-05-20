@@ -23,12 +23,17 @@ func Show(c *fiber.Ctx) error {
 			"email":         users.User.Email,
 			"password":      users.User.Password,
 			"id_masyarakat": users.Idm,
+			"no_kk":         users.No_Kk,
 			"nama":          users.Nama,
 			"tempat_lahir":  users.Tempat_lahir,
 			"birthday":      users.Birthday[0:10],
+			"agama":         users.Agama,
+			"pekerjaan":     users.Pekerjaan,
+			"status":        users.Status,
 			"gender":        users.Gender,
 			"no_hp":         users.No_hp,
 			"alamat":        users.Alamat,
+			"warga_negara":  users.Warga_Negara,
 			"createdAt":     users.CreatedAt.String()[0:10],
 		}
 	}
@@ -56,12 +61,17 @@ func ShowId(c *fiber.Ctx) error {
 		"email":         masyarakat.User.Email,
 		"password":      masyarakat.User.Password,
 		"id_masyarakat": masyarakat.Idm,
+		"no_kk":         masyarakat.No_Kk,
 		"nama":          masyarakat.Nama,
 		"tempat_lahir":  masyarakat.Tempat_lahir,
 		"birthday":      masyarakat.Birthday[0:10],
+		"agama":         masyarakat.Agama,
+		"pekerjaan":     masyarakat.Pekerjaan,
+		"status":        masyarakat.Status,
 		"gender":        masyarakat.Gender,
 		"no_hp":         masyarakat.No_hp,
 		"alamat":        masyarakat.Alamat,
+		"warga_negara":  masyarakat.Warga_Negara,
 		"createdAt":     masyarakat.CreatedAt.String()[0:10],
 	})
 }
@@ -93,19 +103,14 @@ func UpdateProfile(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"msg": "Email tidak boleh kosong"})
 	}
 
-	var cekEmail models.User
-	if err := models.DB.Where("email =?", user.Email).Find(&cekEmail).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			if user.Email == cekEmail.Email {
-				return c.Status(400).JSON(fiber.Map{"msg": "Email sudah digunakan"})
-			}
-		}
-	}
-
 	var masyarakat models.Masyarakat
 	masyarakat.NIK = nik
 	if err := c.BodyParser(&masyarakat); err != nil {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
+	}
+
+	if masyarakat.No_Kk == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Nomor kk kosong"})
 	}
 
 	if masyarakat.Nama == "" {
@@ -124,22 +129,42 @@ func UpdateProfile(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Tanggal lahir kosong"})
 	}
 
+	if masyarakat.Agama == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Agama kosong"})
+	}
+
+	if masyarakat.Pekerjaan == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Pekerjaan hp kosong"})
+	}
+
+	if masyarakat.Status == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Status kawin kosong"})
+	}
+
 	if masyarakat.Alamat == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Alamat kosong"})
+	}
+
+	if masyarakat.Warga_Negara == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Warga negara kosong"})
 	}
 
 	if err := models.ValidateMasyarakat(&masyarakat); err != nil {
 		return c.Status(400).JSON(fiber.Map{"msg_validate": err.Error()})
 	}
 
-	if err := tx.Where("id = ?", nik).Updates(&user).Error; err != nil {
+	if err := tx.Model(&cekId).Where("id = ?", nik).Updates(&user).Error; err != nil {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
+
 	if err := tx.Where("nik = ?", nik).Updates(&masyarakat).Error; err != nil {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
 
-	return c.JSON(fiber.Map{"msg": "Profile berhasil di update"})
+	return c.JSON(fiber.Map{
+		"msg":  "Profile berhasil di update",
+		"user": user,
+	})
 }
 
 // Cek ke forum
