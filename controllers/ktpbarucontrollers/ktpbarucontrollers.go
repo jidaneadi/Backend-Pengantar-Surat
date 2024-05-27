@@ -2,9 +2,8 @@ package ktpbarucontrollers
 
 import (
 	"Backend_TA/models"
-	"errors"
+	"Backend_TA/utils"
 	"fmt"
-	"mime/multipart"
 	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
@@ -54,7 +53,7 @@ func CreateKTPBaru(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
 
-	errCheckContentTypeDP := checkContentType(dokumenPribadi, "application/pdf", "application/PDF")
+	errCheckContentTypeDP := utils.CheckContentType(dokumenPribadi, "application/pdf", "application/PDF")
 	if errCheckContentTypeDP != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
 			"message": errCheckContentTypeDP.Error(),
@@ -82,7 +81,7 @@ func CreateKTPBaru(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
 
-	errCheckContentType := checkContentType(suratKeterangan, "application/pdf", "application/PDF")
+	errCheckContentType := utils.CheckContentType(suratKeterangan, "application/pdf", "application/PDF")
 	if errCheckContentType != nil {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
 			"message": errCheckContentType.Error(),
@@ -125,17 +124,142 @@ func CreateKTPBaru(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"msg": "Surat berhasil diajukan"})
 }
 
-func checkContentType(file *multipart.FileHeader, contentTypes ...string) error {
-	if len(contentTypes) > 0 {
-		for _, contentType := range contentTypes {
-			contentTypeFile := file.Header.Get("Content-Type")
-			if contentTypeFile == contentType {
-				return nil
-			}
-		}
+// func checkContentType(file *multipart.FileHeader, contentTypes ...string) error {
+// 	if len(contentTypes) > 0 {
+// 		for _, contentType := range contentTypes {
+// 			contentTypeFile := file.Header.Get("Content-Type")
+// 			if contentTypeFile == contentType {
+// 				return nil
+// 			}
+// 		}
 
-		return errors.New("not allowed file type")
-	} else {
-		return errors.New("not found content type to be checking")
-	}
-}
+// 		return errors.New("not allowed file type")
+// 	} else {
+// 		return errors.New("not found content type to be checking")
+// 	}
+// }
+
+// <<<<<<<<====================SIMPAN DOKUMEN KE TXT================================>>>>>>>>
+// func UjiCobaFile(c *fiber.Ctx) error {
+// 	key := [32]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00,
+// 		0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10}
+// 	nonce := [12]byte{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb}
+// 	counter := uint32(123)
+
+// 	chacha := &utils.ChaCha20{
+// 		Key:     key,
+// 		Nonce:   nonce,
+// 		Counter: counter,
+// 	}
+// 	file, err := c.FormFile("file")
+// 	if err != nil {
+// 		return c.Status(http.StatusBadRequest).SendString("Gagal mendapatkan file: " + err.Error())
+// 	}
+
+// 	input, err := file.Open()
+// 	if err != nil {
+// 		return c.Status(http.StatusInternalServerError).SendString("Gagal membuka file: " + err.Error())
+// 	}
+// 	defer input.Close()
+
+// 	// Mendapatkan nama file baru dengan ekstensi .txt
+// 	newName := strings.Split(file.Filename, ".")
+// 	name := newName[0] + ".txt"
+
+// 	// Membuat jalur file sementara
+// 	tempFilePath := filepath.Join(os.TempDir(), name)
+
+// 	// Melakukan enkripsi file dan menyimpannya ke file sementara
+// 	err = utils.EncryptDecryptFile(chacha, input, tempFilePath)
+// 	if err != nil {
+// 		return c.Status(http.StatusInternalServerError).SendString("Gagal melakukan enkripsi file: " + err.Error())
+// 	}
+
+// 	// Membuat direktori output jika tidak ada
+// 	outputDir := "./public/hasil/"
+// 	err = os.MkdirAll(outputDir, os.ModePerm)
+// 	if err != nil {
+// 		return c.Status(http.StatusInternalServerError).SendString("Gagal membuat direktori output: " + err.Error())
+// 	}
+
+// 	// Membaca isi file yang telah dienkripsi dari file sementara
+// 	encryptedData, err := os.ReadFile(tempFilePath)
+// 	if err != nil {
+// 		return c.Status(http.StatusInternalServerError).SendString("Gagal membaca file enkripsi: " + err.Error())
+// 	}
+
+// 	// Menyiapkan jalur file .txt untuk menyimpan hasil enkripsi
+// 	encryptedFilePath := filepath.Join(outputDir, name)
+
+// 	// Menulis hasil enkripsi ke file .txt di direktori output
+// 	err = os.WriteFile(encryptedFilePath, encryptedData, 0644)
+// 	if err != nil {
+// 		return c.Status(http.StatusInternalServerError).SendString("Gagal menyimpan hasil enkripsi: " + err.Error())
+// 	}
+
+// 	return c.SendString("File berhasil dienkripsi")
+// }
+
+// func UjiCobaFile(c *fiber.Ctx) error {
+// 	key := [32]byte{0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00,
+// 		0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10}
+// 	nonce := [12]byte{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb}
+// 	counter := uint32(123)
+
+// 	chacha := &utils.ChaCha20{
+// 		Key:     key,
+// 		Nonce:   nonce,
+// 		Counter: counter,
+// 	}
+
+// 	file, err := c.FormFile("file")
+// 	if err != nil {
+// 		return c.Status(http.StatusBadRequest).SendString("Gagal mendapatkan file: " + err.Error())
+// 	}
+
+// 	input, err := file.Open()
+// 	if err != nil {
+// 		return c.Status(http.StatusInternalServerError).SendString("Gagal membuka file: " + err.Error())
+// 	}
+// 	defer input.Close()
+
+// 	// Mendapatkan nama file baru dengan ekstensi .txt
+// 	newName := strings.Split(file.Filename, ".")
+// 	name := newName[0] + ".txt"
+
+// 	// Membuat jalur file sementara
+// 	tempFilePath := filepath.Join(os.TempDir(), name)
+
+// 	// Melakukan enkripsi file dan menyimpannya ke file sementara
+// 	err = utils.EncryptDecryptFile(chacha, input, tempFilePath)
+// 	if err != nil {
+// 		return c.Status(http.StatusInternalServerError).SendString("Gagal melakukan enkripsi file: " + err.Error())
+// 	}
+
+// 	// Membuat direktori output jika tidak ada
+// 	outputDir := "./public/hasil/"
+// 	err = os.MkdirAll(outputDir, os.ModePerm)
+// 	if err != nil {
+// 		return c.Status(http.StatusInternalServerError).SendString("Gagal membuat direktori output: " + err.Error())
+// 	}
+
+// 	// Menyiapkan jalur file enkripsi
+// 	encryptedFile := filepath.Join(outputDir, file.Filename)
+
+// 	// Memindahkan file sementara ke lokasi yang ditentukan
+// 	err = os.Rename(tempFilePath, encryptedFile)
+// 	if err != nil {
+// 		return c.Status(http.StatusInternalServerError).SendString("Gagal menyimpan file: " + err.Error())
+// 	}
+
+// Membaca isi file yang telah dienkripsi
+// encryptedData, err := os.ReadFile(encryptedFile)
+// if err != nil {
+// 	return c.Status(http.StatusInternalServerError).SendString("Gagal membaca file enkripsi: " + err.Error())
+// }
+
+// Mengirimkan isi file yang telah dienkripsi sebagai respons
+// return c.SendString("File berhasil dienkripsi: " + string(encryptedData))
+// dataEnkrip := string(encryptedData)
+// 	return c.JSON(fiber.Map{"data": encryptedData})
+// }

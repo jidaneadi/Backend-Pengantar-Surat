@@ -155,7 +155,7 @@ func Register(c *fiber.Ctx) error {
 	}
 
 	if masyarakat.Pekerjaan == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Pekerjaan hp kosong"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"msg": "Pekerjaan kosong"})
 	}
 
 	if masyarakat.Status == "" {

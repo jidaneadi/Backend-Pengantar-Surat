@@ -19,7 +19,3 @@ func EncryptHash(data string) string {
 
 	return hashString
 }
-
-// func EncryptAES(data string) string {
-
-// }

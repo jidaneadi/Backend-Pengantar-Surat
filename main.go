@@ -5,6 +5,7 @@ import (
 	"Backend_TA/controllers/authcontrollers"
 	"Backend_TA/controllers/ktpbarucontrollers"
 	"Backend_TA/controllers/masyarakatcontrollers"
+	"Backend_TA/controllers/ujicobacontrollers"
 	"Backend_TA/models"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,6 +22,7 @@ func main() {
 	profile := api.Group("/profile")
 	allsurat := api.Group("/surat")
 	ktpbaru := api.Group("/ktpbaru")
+	pengujian := api.Group("/uji")
 
 	auth.Post("/refresh", authcontrollers.RefreshToken)
 	auth.Post("/register", authcontrollers.Register)
@@ -37,12 +39,21 @@ func main() {
 	ktpbaru.Post("/:id" /*, middlewares.Auth*/, ktpbarucontrollers.CreateKTPBaru)
 
 	//API utk semua sura tanpat terkecuali
-	allsurat.Get("/" /*, middlewares.Auth*/, allsuratcontrollers.ShowSurat)              //Melihat seluruh data surat
+	allsurat.Get("/" /*, middlewares.Auth*/, allsuratcontrollers.ShowSurat)
+	allsurat.Get("/show/:id" /*, middlewares.Auth*/, allsuratcontrollers.ShowSuratById)  //Melihat seluruh data surat berdasarkan id surat
 	allsurat.Get("/:id" /*, middlewares.Auth*/, allsuratcontrollers.ShowSuratByNik)      //Melihat data surat berdasarkan NIK user yang mengajukan
 	allsurat.Get("/data_doc/:id", allsuratcontrollers.ShowDataDoc)                       //Melihat seluruh data dokumen syarat dari pengajuan surat
-	allsurat.Get("/doc/:id" /*, middlewares.Auth*/, allsuratcontrollers.ShowDocSyarat)   //Melakukan download dokumen syarat setiap surat
+	allsurat.Get("/doc/:id" /*, middlewares.Auth*/, allsuratcontrollers.ShowDocSyarat)   //Melakukan download dokumen syarat setiap surat berdasarkan id doc_syarat
 	allsurat.Put("/doc/:id" /*, middlewares.Auth*/, allsuratcontrollers.UpdateDocSyarat) //Melakukan update input dokumen syarat
 	allsurat.Put("/:id" /*, middlewares.Auth*/, allsuratcontrollers.Update)              //Melakukan update hanya pada data surat tanpa mengubah data dokumen syarat
 	allsurat.Delete("/:id" /*, middlewares.Auth*/, allsuratcontrollers.Delete)           //Menghapus data surat
+
+	// Progam test enkrip isi file
+	pengujian.Post("/enkrip/", ujicobacontrollers.EncryptFile)
+	pengujian.Post("/dekrip/", ujicobacontrollers.DecryptFile)
+
+	//Progam test enkrip file
+	pengujian.Post("/enkripfile/", ujicobacontrollers.UjiCobaFile)
+	pengujian.Post("/dekripfile/", ujicobacontrollers.UjiCobaFileDek)
 	app.Listen(":4001")
 }

@@ -38,11 +38,24 @@ func ShowSurat(c *fiber.Ctx) error {
 	return c.JSON(data)
 }
 
+func ShowSuratById(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"msg": "Id surat kosong"})
+	}
+
+	var surat models.Surat
+	if err := models.DB.First(&surat, "id =?", id).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"msg": err.Error()})
+	}
+	return c.JSON(surat)
+}
+
 func ShowSuratByNik(c *fiber.Ctx) error {
 	id := c.Params("id")
 	tx := models.DB
 	if id == "" {
-		return c.Status(400).JSON(fiber.Map{"msg": "Id surat kosong"})
+		return c.Status(400).JSON(fiber.Map{"msg": "Id user kosong"})
 	}
 
 	var surat []models.Surat
