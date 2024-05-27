@@ -1,8 +1,14 @@
 package allsuratcontrollers
 
 import (
+	"Backend_TA/config"
 	"Backend_TA/models"
+	"Backend_TA/utils"
+	"encoding/hex"
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -110,19 +116,19 @@ func ShowDataDoc(c *fiber.Ctx) error {
 	return c.JSON(data)
 }
 
-func ShowDocSyarat(c *fiber.Ctx) error {
-	id := c.Params("id")
-	if id == "" {
-		return c.Status(400).JSON(fiber.Map{"msg": "Id kosong!"})
-	}
+// func ShowDocSyarat(c *fiber.Ctx) error {
+// 	id := c.Params("id")
+// 	if id == "" {
+// 		return c.Status(400).JSON(fiber.Map{"msg": "Id kosong!"})
+// 	}
 
-	var doc_syarat models.Dokumen_Syarat
-	if err := models.DB.Where("id =?", id).First(&doc_syarat).Error; err != nil {
-		return c.Status(400).JSON(fiber.Map{"msg": err})
-	}
+// 	var doc_syarat models.Dokumen_Syarat
+// 	if err := models.DB.Where("id =?", id).First(&doc_syarat).Error; err != nil {
+// 		return c.Status(400).JSON(fiber.Map{"msg": err})
+// 	}
 
-	return c.Download(fmt.Sprintf("./public/ktp_baru/%s", doc_syarat.Filename))
-}
+// 	return c.Download(fmt.Sprintf("./public/ktp_baru/%s", doc_syarat.Filename))
+// }
 
 // Masih terdapat kesalahan, akan dibenahi saat tersambung ke frontend
 func UpdateDocSyarat(c *fiber.Ctx) error {
@@ -249,6 +255,138 @@ func Delete(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"msg": "Delete data sukses"})
 }
+
+func ShowDocSyarat(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"msg": "Id kosong!"})
+	}
+
+	var doc_syarat models.Dokumen_Syarat
+	if err := models.DB.Where("id =?", id).First(&doc_syarat).Error; err != nil {
+		return c.Status(400).JSON(fiber.Map{"msg": err})
+	}
+
+	// Mendapatkan path file hasil dekripsi
+	// tempFilePath := filepath.Join(os.TempDir(), doc_syarat.Filename)
+
+	// Membuat objek ChaCha20
+	dataKey := config.RenderEnv("KEY_CHACHA20")
+	dataNonce := config.RenderEnv("NONCE")
+	key, _ := hex.DecodeString(dataKey)
+	nonce, _ := hex.DecodeString(dataNonce)
+
+	var keyArray [32]byte
+	var nonceArray [12]byte
+
+	copy(keyArray[:], key)
+	copy(nonceArray[:], nonce)
+
+	chacha := &utils.ChaCha20{
+		Key:     keyArray,
+		Nonce:   nonceArray,
+		Counter: 1,
+	}
+
+	// Ambil nama file input dari parameter
+	inputFileName := doc_syarat.Filename
+	if inputFileName == "" {
+		return c.Status(http.StatusBadRequest).SendString("Nama file input tidak boleh kosong")
+	}
+
+	// Persiapkan jalur file input dan output
+	inputFilePath := filepath.Join("./public/hasil", inputFileName)
+	outputFileName := strings.TrimSuffix(inputFileName, filepath.Ext(inputFileName)) + ".pdf"
+	outputFilePath := filepath.Join("./public/hasil", outputFileName)
+
+	// Dekripsi file
+	err := DecryptFile(chacha, inputFilePath, outputFilePath)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).SendString("Gagal melakukan dekripsi: " + err.Error())
+	}
+
+	return c.SendFile(outputFilePath)
+}
+
+func DecryptFile(chacha *utils.ChaCha20, inputFilePath, outputFilePath string) error {
+	// Baca data terenkripsi dari file
+	encryptedData, err := os.ReadFile(inputFilePath)
+	if err != nil {
+		return err
+	}
+
+	// Dekripsi data
+	decryptedData := make([]byte, len(encryptedData))
+	chacha.Counter = 1 // Reset counter untuk dekripsi
+	chacha.XORKeyStream(decryptedData, encryptedData)
+
+	// Simpan hasil dekripsi ke file output
+	err = os.WriteFile(outputFilePath, decryptedData, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// func ShowDocSyarat(c *fiber.Ctx) error {
+// 	id := c.Params("id")
+// 	if id == "" {
+// 		return c.Status(400).JSON(fiber.Map{"msg": "Id kosong!"})
+// 	}
+
+// 	var doc_syarat models.Dokumen_Syarat
+// 	if err := models.DB.Where("id =?", id).First(&doc_syarat).Error; err != nil {
+// 		return c.Status(400).JSON(fiber.Map{"msg": err})
+// 	}
+
+// 	// Path untuk file hasil dekripsi
+// 	outputFilePath := filepath.Join("./public/hasil", doc_syarat.Filename)
+
+// 	// Memanggil fungsi untuk melakukan dekripsi
+// 	if err := DecryptFileUsingChacha(outputFilePath); err != nil {
+// 		return c.Status(http.StatusInternalServerError).SendString("Failed to decrypt file: " + err.Error())
+// 	}
+
+// 	// Mengirimkan file yang telah didekripsi sebagai response
+// 	return c.Download(outputFilePath)
+// }
+
+// func DecryptFileUsingChacha(filePath string) error {
+// 	dataKey := config.RenderEnv("KEY_CHACHA20")
+// 	dataNonce := config.RenderEnv("NONCE")
+// 	key, _ := hex.DecodeString(dataKey)
+// 	nonce, _ := hex.DecodeString(dataNonce)
+
+// 	var keyArray [32]byte
+// 	var nonceArray [12]byte
+
+// 	copy(keyArray[:], key)
+// 	copy(nonceArray[:], nonce)
+
+// 	chacha := &utils.ChaCha20{
+// 		Key:     keyArray,
+// 		Nonce:   nonceArray,
+// 		Counter: 1,
+// 	}
+
+// 	// Membaca data dari file yang akan didekripsi
+// 	input, err := os.ReadFile(filePath)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	// Melakukan dekripsi menggunakan ChaCha20
+// 	chacha.XORKeyStream(input, input)
+
+// 	// Menyimpan hasil dekripsi kembali ke file
+// 	if err := os.WriteFile(filePath, input, 0644); err != nil {
+// 		return err
+// 	}
+
+// 	fmt.Println("msg", "Sukses melakukan dekripsi")
+// 	return nil
+// }
 
 // func ShowSuratCoba(c *fiber.Ctx) error {
 // 	var doc_syarat []models.Dokumen_Syarat

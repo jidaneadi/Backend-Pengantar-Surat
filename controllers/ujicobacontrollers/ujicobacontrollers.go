@@ -1,8 +1,10 @@
 package ujicobacontrollers
 
 import (
+	"Backend_TA/config"
 	"Backend_TA/utils"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,8 +13,10 @@ import (
 )
 
 func EncryptFile(c *fiber.Ctx) error {
-	key, _ := hex.DecodeString("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
-	nonce, _ := hex.DecodeString("000000000000000000000000")
+	dataKey := config.RenderEnv("KEY_CHACHA20")
+	dataNonce := config.RenderEnv("NONCE")
+	key, _ := hex.DecodeString(dataKey)
+	nonce, _ := hex.DecodeString(dataNonce)
 
 	var keyArray [32]byte
 	var nonceArray [12]byte
@@ -47,8 +51,10 @@ func EncryptFile(c *fiber.Ctx) error {
 }
 
 func UjiCobaFile(c *fiber.Ctx) error {
-	key, _ := hex.DecodeString("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
-	nonce, _ := hex.DecodeString("000000000000000000000000")
+	dataKey := config.RenderEnv("KEY_CHACHA20")
+	dataNonce := config.RenderEnv("NONCE")
+	key, _ := hex.DecodeString(dataKey)
+	nonce, _ := hex.DecodeString(dataNonce)
 
 	var keyArray [32]byte
 	var nonceArray [12]byte
@@ -106,8 +112,10 @@ func UjiCobaFile(c *fiber.Ctx) error {
 }
 
 func DecryptFile(c *fiber.Ctx) error {
-	key, _ := hex.DecodeString("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
-	nonce, _ := hex.DecodeString("000000000000000000000000")
+	dataKey := config.RenderEnv("KEY_CHACHA20")
+	dataNonce := config.RenderEnv("NONCE")
+	key, _ := hex.DecodeString(dataKey)
+	nonce, _ := hex.DecodeString(dataNonce)
 
 	var keyArray [32]byte
 	var nonceArray [12]byte
@@ -126,19 +134,20 @@ func DecryptFile(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).SendString("Failed to get file: " + err.Error())
 	}
 
-	input, err := file.Open()
-	if err != nil {
-		return c.Status(http.StatusInternalServerError).SendString("Failed to open file: " + err.Error())
+	inputFilePath := filepath.Join(os.TempDir(), file.Filename)
+	if err := c.SaveFile(file, inputFilePath); err != nil {
+		return c.Status(http.StatusInternalServerError).SendString("Failed to save file: " + err.Error())
 	}
-	defer input.Close()
 
-	tempFilePath := filepath.Join(os.TempDir(), file.Filename)
-	err = utils.EncryptDecryptFile(chacha, input, tempFilePath)
+	outputFilePath := filepath.Join("./public/hasildekrip", file.Filename)
+
+	err = utils.EncryptDecryptFile2(chacha, inputFilePath, outputFilePath)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).SendString("Failed to decrypt file: " + err.Error())
 	}
 
-	return c.Download(tempFilePath)
+	fmt.Println(inputFilePath)
+	return c.Download(outputFilePath)
 }
 
 func UjiCobaFileDek(c *fiber.Ctx) error {
