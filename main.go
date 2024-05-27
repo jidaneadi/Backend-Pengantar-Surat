@@ -55,7 +55,7 @@ func main() {
 	//Progam test enkrip file
 	pengujian.Post("/enkripfile/", ujicobacontrollers.UjiCobaFile)
 	pengujian.Post("/dekripfile/", ujicobacontrollers.UjiCobaFileDek)
-	pengujian.Post("/enkripfile2/", ktpbarucontrollers.UjiCobaFile)
-	pengujian.Post("/dekripfile2/", ktpbarucontrollers.UjiCobaDekripsiFile)
+	// pengujian.Post("/enkripfile2/", ktpbarucontrollers.UjiCobaFile)
+	// pengujian.Post("/dekripfile2/", ktpbarucontrollers.UjiCobaDekripsiFile)
 	app.Listen(":4001")
 }

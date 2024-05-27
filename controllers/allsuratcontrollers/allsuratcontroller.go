@@ -264,11 +264,8 @@ func ShowDocSyarat(c *fiber.Ctx) error {
 
 	var doc_syarat models.Dokumen_Syarat
 	if err := models.DB.Where("id =?", id).First(&doc_syarat).Error; err != nil {
-		return c.Status(400).JSON(fiber.Map{"msg": err})
+		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
-
-	// Mendapatkan path file hasil dekripsi
-	// tempFilePath := filepath.Join(os.TempDir(), doc_syarat.Filename)
 
 	// Membuat objek ChaCha20
 	dataKey := config.RenderEnv("KEY_CHACHA20")
@@ -295,186 +292,15 @@ func ShowDocSyarat(c *fiber.Ctx) error {
 	}
 
 	// Persiapkan jalur file input dan output
-	inputFilePath := filepath.Join("./public/hasil", inputFileName)
+	inputFilePath := filepath.Join("./public/ktp_baru", inputFileName)
 	outputFileName := strings.TrimSuffix(inputFileName, filepath.Ext(inputFileName)) + ".pdf"
-	outputFilePath := filepath.Join("./public/hasil", outputFileName)
+	outputFilePath := filepath.Join(os.TempDir(), outputFileName)
 
 	// Dekripsi file
-	err := DecryptFile(chacha, inputFilePath, outputFilePath)
+	err := utils.DecryptFile(chacha, inputFilePath, outputFilePath)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).SendString("Gagal melakukan dekripsi: " + err.Error())
 	}
 
-	return c.SendFile(outputFilePath)
+	return c.Download(outputFilePath)
 }
-
-func DecryptFile(chacha *utils.ChaCha20, inputFilePath, outputFilePath string) error {
-	// Baca data terenkripsi dari file
-	encryptedData, err := os.ReadFile(inputFilePath)
-	if err != nil {
-		return err
-	}
-
-	// Dekripsi data
-	decryptedData := make([]byte, len(encryptedData))
-	chacha.Counter = 1 // Reset counter untuk dekripsi
-	chacha.XORKeyStream(decryptedData, encryptedData)
-
-	// Simpan hasil dekripsi ke file output
-	err = os.WriteFile(outputFilePath, decryptedData, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// func ShowDocSyarat(c *fiber.Ctx) error {
-// 	id := c.Params("id")
-// 	if id == "" {
-// 		return c.Status(400).JSON(fiber.Map{"msg": "Id kosong!"})
-// 	}
-
-// 	var doc_syarat models.Dokumen_Syarat
-// 	if err := models.DB.Where("id =?", id).First(&doc_syarat).Error; err != nil {
-// 		return c.Status(400).JSON(fiber.Map{"msg": err})
-// 	}
-
-// 	// Path untuk file hasil dekripsi
-// 	outputFilePath := filepath.Join("./public/hasil", doc_syarat.Filename)
-
-// 	// Memanggil fungsi untuk melakukan dekripsi
-// 	if err := DecryptFileUsingChacha(outputFilePath); err != nil {
-// 		return c.Status(http.StatusInternalServerError).SendString("Failed to decrypt file: " + err.Error())
-// 	}
-
-// 	// Mengirimkan file yang telah didekripsi sebagai response
-// 	return c.Download(outputFilePath)
-// }
-
-// func DecryptFileUsingChacha(filePath string) error {
-// 	dataKey := config.RenderEnv("KEY_CHACHA20")
-// 	dataNonce := config.RenderEnv("NONCE")
-// 	key, _ := hex.DecodeString(dataKey)
-// 	nonce, _ := hex.DecodeString(dataNonce)
-
-// 	var keyArray [32]byte
-// 	var nonceArray [12]byte
-
-// 	copy(keyArray[:], key)
-// 	copy(nonceArray[:], nonce)
-
-// 	chacha := &utils.ChaCha20{
-// 		Key:     keyArray,
-// 		Nonce:   nonceArray,
-// 		Counter: 1,
-// 	}
-
-// 	// Membaca data dari file yang akan didekripsi
-// 	input, err := os.ReadFile(filePath)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Melakukan dekripsi menggunakan ChaCha20
-// 	chacha.XORKeyStream(input, input)
-
-// 	// Menyimpan hasil dekripsi kembali ke file
-// 	if err := os.WriteFile(filePath, input, 0644); err != nil {
-// 		return err
-// 	}
-
-// 	fmt.Println("msg", "Sukses melakukan dekripsi")
-// 	return nil
-// }
-
-// func ShowSuratCoba(c *fiber.Ctx) error {
-// 	var doc_syarat []models.Dokumen_Syarat
-// 	tx := models.DB
-
-// 	if err := tx.Preload("Surat").Preload("Surat.Masyarakat").Find(&doc_syarat).Error; err != nil {
-// 		if err == gorm.ErrRecordNotFound {
-// 			return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
-// 		}
-// 		return c.Status(500).JSON(fiber.Map{"msg": err.Error()})
-// 	}
-
-// 	data := make([]fiber.Map, len(doc_syarat))
-// 	for i, dataDoc := range doc_syarat {
-// 		updateTanggal := dataDoc.UpdatedAt.String()[0:10] + " " + dataDoc.UpdatedAt.String()[11:19]
-// 		data[i] = fiber.Map{
-// 			"id_surat":       dataDoc.ID,
-// 			"id_masyarakat":  dataDoc.Surat.Id_masyarakat,
-// 			"nik":            dataDoc.Surat.Masyarakat.NIK,
-// 			"nama":           dataDoc.Surat.Masyarakat.Nama,
-// 			"jns_surat":      dataDoc.Surat.Jns_surat,
-// 			"status":         dataDoc.Surat.Status,
-// 			"updated_at":     updateTanggal,
-// 			"keterangan":     dataDoc.Surat.Keterangan,
-// 			"dokumen_syarat": dataDoc.ID,
-// 		}
-// 	}
-
-// 	return c.JSON(data)
-// }
-
-// func Show(c *fiber.Ctx) error {
-// 	var surat []models.Dokumen_Syarat
-
-// 	//Join 3 tabel
-// 	if err := models.DB.Preload("Surat.Masyarakat").Find(&surat).Error; err != nil {
-// 		if err == gorm.ErrRecordNotFound {
-// 			return c.Status(404).JSON(fiber.Map{"msg": "Data null"})
-// 		}
-// 		return c.Status(500).JSON(fiber.Map{"msg": err.Error()})
-// 	}
-
-// 	data := make([]fiber.Map, len(surat))
-// 	for i, DataSurat := range surat {
-// 		newIdsurat := utils.EncryptHash(DataSurat.Id_surat)
-// 		data[i] = fiber.Map{
-// 			"id_surat":   newIdsurat[0:9],
-// 			"nik":        DataSurat.Surat.Masyarakat.NIK,
-// 			"nama":       DataSurat.Surat.Masyarakat.Nama,
-// 			"syarat":     DataSurat.Filename,
-// 			"jns_surat":  DataSurat.Surat.Jns_surat,
-// 			"status":     DataSurat.Surat.Status,
-// 			"updated_at": DataSurat.Surat.UpdatedAt.String()[0:10],
-// 			"keterangan": DataSurat.Surat.Keterangan,
-// 		}
-// 	}
-// 	return c.JSON(data)
-// }
-
-// func ShowId(c *fiber.Ctx) error {
-// 	id := c.Params("id")
-// 	var dataSurat []models.Dokumen_Syarat
-
-// 	if err := models.DB.Preload("Surat.Masyarakat").
-// 		Joins("JOIN surat ON surat.id = dokumen_syarat.id_surat").
-// 		Joins("JOIN masyarakat ON masyarakat.idm = surat.id_masyarakat").
-// 		Where("masyarakat.nik =?", id).
-// 		Find(&dataSurat).Error; err != nil {
-// 		if err == gorm.ErrRecordNotFound {
-// 			return c.Status(404).JSON(fiber.Map{"msg": "Data not found"})
-// 		}
-// 		return c.Status(500).JSON(fiber.Map{"msg": err.Error()})
-// 	}
-
-// 	data := make([]fiber.Map, len(dataSurat))
-// 	for i, surat := range dataSurat {
-// 		newIdsurat := utils.EncryptHash(surat.Id_surat)
-// 		data[i] = fiber.Map{
-// 			"id_surat":   newIdsurat[0:9],
-// 			"nik":        surat.Surat.Masyarakat.NIK,
-// 			"nama":       surat.Surat.Masyarakat.Nama,
-// 			"syarat":     surat.Filename,
-// 			"jns_surat":  surat.Surat.Jns_surat,
-// 			"status":     surat.Surat.Status,
-// 			"updated_at": surat.Surat.UpdatedAt.String()[0:10],
-// 			"keterangan": surat.Surat.Keterangan,
-// 		}
-// 	}
-
-// 	return c.JSON(data)
-// }

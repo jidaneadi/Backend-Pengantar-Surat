@@ -128,6 +128,27 @@ func EncryptDecryptFile(chacha *ChaCha20, inputFile multipart.File, outputFilePa
 	return nil
 }
 
+func DecryptFile(chacha *ChaCha20, inputFilePath, outputFilePath string) error {
+	// Baca data terenkripsi dari file
+	encryptedData, err := os.ReadFile(inputFilePath)
+	if err != nil {
+		return err
+	}
+
+	// Dekripsi data
+	decryptedData := make([]byte, len(encryptedData))
+	chacha.Counter = 1 // Reset counter untuk dekripsi
+	chacha.XORKeyStream(decryptedData, encryptedData)
+
+	// Simpan hasil dekripsi ke file output
+	err = os.WriteFile(outputFilePath, decryptedData, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // func EncryptDecryptFile(c *fiber.Ctx, chacha *ChaCha20, inputFile *multipart.FileHeader, outputFile string) error {
 // 	src, err := inputFile.Open()
 // 	if err != nil {
