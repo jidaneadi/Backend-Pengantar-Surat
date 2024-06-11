@@ -109,7 +109,6 @@ func EncryptDecryptFile2(chacha *ChaCha20, inputFilePath string, outputFilePath 
 	return nil
 }
 
-// <<<<<<<<<<=========================Enkrip filenya============================>>>>>>>>>>>>>>>
 func EncryptDecryptFile(chacha *ChaCha20, inputFile multipart.File, outputFilePath string) error {
 	data, err := io.ReadAll(inputFile)
 	if err != nil {

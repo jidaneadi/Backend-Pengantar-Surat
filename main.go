@@ -4,6 +4,7 @@ import (
 	"Backend_TA/controllers/allsuratcontrollers"
 	"Backend_TA/controllers/authcontrollers"
 	"Backend_TA/controllers/ktpbarucontrollers"
+	"Backend_TA/controllers/ktplamacontrollers"
 	"Backend_TA/controllers/masyarakatcontrollers"
 	"Backend_TA/controllers/ujicobacontrollers"
 	"Backend_TA/models"
@@ -22,6 +23,7 @@ func main() {
 	profile := api.Group("/profile")
 	allsurat := api.Group("/surat")
 	ktpbaru := api.Group("/ktpbaru")
+	ktplama := api.Group("/ktplama")
 	pengujian := api.Group("/uji")
 
 	auth.Post("/refresh", authcontrollers.RefreshToken)
@@ -37,6 +39,9 @@ func main() {
 
 	//API surat KTP Baru
 	ktpbaru.Post("/:id" /*, middlewares.Auth*/, ktpbarucontrollers.CreateKTPBaru)
+
+	//API surat KTP lama
+	ktplama.Post("/:id" /*, middlewares.Auth*/, ktplamacontrollers.CreateKTPLama)
 
 	//API utk semua sura tanpat terkecuali
 	allsurat.Get("/" /*, middlewares.Auth*/, allsuratcontrollers.ShowSurat)

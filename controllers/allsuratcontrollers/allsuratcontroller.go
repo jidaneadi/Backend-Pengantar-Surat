@@ -267,6 +267,8 @@ func ShowDocSyarat(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
 
+	// var dataSurat models.S
+
 	// Membuat objek ChaCha20
 	dataKey := config.RenderEnv("KEY_CHACHA20")
 	dataNonce := config.RenderEnv("NONCE")
