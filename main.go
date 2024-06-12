@@ -16,7 +16,11 @@ import (
 func main() {
 	models.ConnectDB()
 	app := fiber.New()
-	app.Use(cors.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3001", // Ubah ini sesuai dengan origin frontend Anda
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowMethods: "GET, POST, PUT, DELETE",
+	}))
 
 	api := app.Group("/")
 	auth := api.Group("auth")
