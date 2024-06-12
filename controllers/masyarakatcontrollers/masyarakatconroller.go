@@ -49,7 +49,7 @@ func ShowId(c *fiber.Ctx) error {
 
 	tx := models.DB
 	var masyarakat models.Masyarakat
-	if err := tx.Preload("User").Joins("JOIN User ON masyarakat.nik = user.id").Where("user.id = ?", nik).First(&masyarakat).Error; err != nil {
+	if err := tx.Preload("user").Joins("JOIN User ON masyarakat.nik = user.id").Where("user.id = ?", nik).First(&masyarakat).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(404).JSON(fiber.Map{"msg": "User not found"})
 		}
