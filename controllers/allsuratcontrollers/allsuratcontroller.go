@@ -267,7 +267,11 @@ func ShowDocSyarat(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
 	}
 
-	// var dataSurat models.S
+	idSurat := doc_syarat.Id_surat
+	var dataSurat models.Surat
+	if err := models.DB.Where("id =? ", idSurat).First(&dataSurat).Error; err != nil {
+		return c.Status(400).JSON(fiber.Map{"msg": err.Error()})
+	}
 
 	// Membuat objek ChaCha20
 	dataKey := config.RenderEnv("KEY_CHACHA20")
@@ -294,7 +298,7 @@ func ShowDocSyarat(c *fiber.Ctx) error {
 	}
 
 	// Persiapkan jalur file input dan output
-	inputFilePath := filepath.Join("./public/ktp_baru", inputFileName)
+	inputFilePath := filepath.Join("./public/", dataSurat.Jns_surat, inputFileName)
 	outputFileName := strings.TrimSuffix(inputFileName, filepath.Ext(inputFileName)) + ".pdf"
 	outputFilePath := filepath.Join(os.TempDir(), outputFileName)
 
